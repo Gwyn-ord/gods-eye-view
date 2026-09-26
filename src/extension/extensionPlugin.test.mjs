@@ -21,12 +21,14 @@ function mounted(plugin) {
 
 test('with GEV_EXTENSION unset the standalone config has no extension plugin', () => {
   const saved = process.env.GEV_EXTENSION;
-  delete process.env.GEV_EXTENSION;
+  // Empty, not deleted: loadEnv only fills keys that are undefined.
+  process.env.GEV_EXTENSION = '';
   try {
     const names = standaloneConfig({ mode: 'test' }).plugins.map((p) => p.name);
     assert.ok(!names.includes('gev-extension'));
   } finally {
-    if (saved !== undefined) process.env.GEV_EXTENSION = saved;
+    if (saved === undefined) delete process.env.GEV_EXTENSION;
+    else process.env.GEV_EXTENSION = saved;
   }
 });
 
