@@ -37,7 +37,11 @@ async function handleHudSummary(req, res) {
   }
 
   const apiKey = process.env.OPENAI_API_KEY;
-  const keyless = keylessHudSummaryResponse(apiKey);
+  // GEV_HUD_SUMMARY=off: answer as if keyless, so the HUD uses its local text and
+  // the key stays for voice only.
+  const keyless = keylessHudSummaryResponse(
+    process.env.GEV_HUD_SUMMARY === 'off' ? '' : apiKey,
+  );
   if (keyless) {
     res.statusCode = keyless.statusCode;
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
