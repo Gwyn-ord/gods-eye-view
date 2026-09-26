@@ -39,6 +39,7 @@ import { unavailablePlaceSearch } from '../search/placeSearch.js';
 import * as defaultAnnotationResolver from '../annotations/annotationResolver.js';
 import { normalizeRadioCountryInput } from '../data/radioCountry.js';
 import { TR3B_CLASS } from '../data/tr3bRegistry.js';
+import { getExtensionHandler } from '../extension/registry.js';
 
 const ALLOWED_STYLES = new Set([
   'normal',
@@ -348,6 +349,10 @@ export function createGevActionRunner({
     const current = () =>
       !runOptions.signal?.aborted &&
       (typeof runOptions.isCurrent !== 'function' || runOptions.isCurrent());
+
+    const extensionHandler = getExtensionHandler(name);
+    if (extensionHandler)
+      return extensionHandler(args, { signal: runOptions.signal });
 
     // Navigation tools interrupt any continuous camera motion (spec §1.1) —
     // checked FIRST because each handler returns.

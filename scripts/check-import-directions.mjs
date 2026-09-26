@@ -9,6 +9,11 @@ const builtins = new Set(
   builtinModules.flatMap((name) => [name, `node:${name}`]),
 );
 const code = /\.[mc]?js$/;
+// The GEV extension loaders import the configured GEV_EXTENSION path by design.
+const computedImportAllowed = new Set([
+  'server/extension/load.js',
+  'src/extension/browserLoader.js',
+]);
 const entry = (file) =>
   file === 'src/main.js' || file.startsWith('src/standalone/');
 const tests = (file) =>
@@ -84,7 +89,9 @@ export function checkImportDirections(root) {
     }
     let analysis;
     try {
-      analysis = analyzeModule(readFileSync(resolved, 'utf8'));
+      analysis = analyzeModule(readFileSync(resolved, 'utf8'), {
+        allowComputedImports: computedImportAllowed.has(file),
+      });
     } catch (error) {
       report(file, error.message);
       return null;
