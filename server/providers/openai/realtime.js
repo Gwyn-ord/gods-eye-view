@@ -13,6 +13,10 @@ import {
 } from './constants.js';
 import { realtimeInstructions } from './instructions.js';
 import { GEV_REALTIME_TOOLS } from './tools.js';
+import {
+  getServerExtension,
+  withExtensionInstructions,
+} from '../../extension/load.js';
 
 function createRealtimeTokenHandler({
   annotationGuidance,
@@ -20,8 +24,10 @@ function createRealtimeTokenHandler({
   fetchImpl = (...args) => fetch(...args),
   resolveApiKey = () => process.env.OPENAI_API_KEY,
   models = {},
+  extension,
 } = {}) {
   return async (req, res) => {
+    const ext = extension === undefined ? getServerExtension() : extension;
     res.setHeader('Cache-Control', 'no-store');
     if (req.method !== 'GET' && req.method !== 'POST') {
       res.statusCode = 405;
@@ -112,8 +118,11 @@ function createRealtimeTokenHandler({
           },
           output: { voice },
         },
-        instructions: realtimeInstructions(annotationGuidance),
-        tools: GEV_REALTIME_TOOLS,
+        instructions: withExtensionInstructions(
+          realtimeInstructions(annotationGuidance),
+          ext,
+        ),
+        tools: ext ? [...GEV_REALTIME_TOOLS, ...ext.tools] : GEV_REALTIME_TOOLS,
         tool_choice: 'auto',
       },
     };
