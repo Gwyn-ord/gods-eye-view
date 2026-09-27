@@ -3,7 +3,7 @@ import { pathToFileURL } from 'node:url';
 import { GEV_ACTION_SCHEMAS } from '../../src/voice/actionSchemas.js';
 
 /** Version of the GEV extension contract this fork implements. */
-export const EXTENSION_CONTRACT = 1;
+export const EXTENSION_CONTRACT = 2;
 const TOOL_NAME = /^[a-z][a-z0-9_]{0,63}$/;
 const MAX_INSTRUCTIONS = 4000;
 const GEV_NAMES = new Set(GEV_ACTION_SCHEMAS.map((schema) => schema.name));
@@ -26,7 +26,7 @@ function validateTool(tool, seen) {
   seen.add(tool.name);
 }
 
-/** Check an extension's server module against contract 1. */
+/** Check an extension's server module against contract 2. */
 export function validateServerExtension(ext) {
   if (!ext || typeof ext !== 'object')
     throw new Error('default export must be an object');

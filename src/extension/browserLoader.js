@@ -45,11 +45,19 @@ export async function loadBrowserExtension({
   try {
     const module = await importModule(url);
     const viewer = application?.getComponents?.().scene?.viewer ?? null;
+    const voice = () =>
+      application?.getComponents?.().tools?.voiceCommands ?? null;
     const started = await module.default({
-      contract: 1,
+      contract: 2,
       mount,
       notify,
       viewer,
+      announce: (data) => voice()?.announce?.(data) ?? false,
+      lastUserTurnAt: () => voice()?.lastUserTurnAt ?? 0,
+      onVoiceReady: (cb) =>
+        voice()?.session?.subscribe?.((event) => {
+          if (event?.type === 'state' && event.state === 'listening') cb();
+        }) ?? (() => {}),
     });
     setExtensionHandlers(started?.handlers ?? {});
     return started;

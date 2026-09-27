@@ -119,7 +119,7 @@ test('a module that fails to import shows the notice and registers nothing', asy
   assert.equal(getExtensionHandler('jobs_status'), null);
 });
 
-test('a loaded module gets contract 1, a mount, notify and the viewer, and its handlers are registered', async () => {
+test('a loaded module gets contract 2, a mount, notify and the viewer, and its handlers are registered', async () => {
   const doc = fakeDoc();
   let seen;
   const application = { getComponents: () => ({ scene: { viewer: 'V' } }) };
@@ -135,7 +135,7 @@ test('a loaded module gets contract 1, a mount, notify and the viewer, and its h
       },
     }),
   });
-  assert.equal(seen.contract, 1);
+  assert.equal(seen.contract, 2);
   assert.equal(seen.viewer, 'V');
   assert.equal(seen.mount.id, 'gev-extension');
   assert.equal(typeof seen.notify, 'function');
@@ -154,4 +154,36 @@ test('a module returning a clashing handler shows the notice', async () => {
     }),
   });
   assert.match(text(doc), new RegExp(EXTENSION_NOTICE));
+});
+
+test('contract 2 gives the module announce, lastUserTurnAt and onVoiceReady over the voice controller', async () => {
+  const announced = [];
+  const listeners = new Set();
+  const controller = {
+    announce: (d) => { announced.push(d); return true; },
+    lastUserTurnAt: 1234,
+    session: { subscribe: (fn) => { listeners.add(fn); return () => listeners.delete(fn); } },
+  };
+  const application = { getComponents: () => ({ scene: { viewer: 'v' }, tools: { voiceCommands: controller } }) };
+  let seen;
+  await loadBrowserExtension({ url: '/x.mjs', application, doc: fakeDoc(),
+    importModule: async () => ({ default: (gev) => { seen = gev; return { handlers: {} }; } }) });
+  assert.equal(seen.contract, 2);
+  assert.equal(seen.announce({ a: 1 }), true);
+  assert.deepEqual(announced, [{ a: 1 }]);
+  assert.equal(seen.lastUserTurnAt(), 1234);
+  let ready = 0;
+  const off = seen.onVoiceReady(() => ready++);
+  for (const fn of listeners) { fn({ type: 'state', state: 'connecting' }); fn({ type: 'state', state: 'listening' }); }
+  assert.equal(ready, 1);
+  off(); assert.equal(listeners.size, 0);
+});
+
+test('with no voice controller, announce is false, lastUserTurnAt is 0 and onVoiceReady is a no-op', async () => {
+  let seen;
+  await loadBrowserExtension({ url: '/x.mjs', application: { getComponents: () => ({}) }, doc: fakeDoc(),
+    importModule: async () => ({ default: (gev) => { seen = gev; return { handlers: {} }; } }) });
+  assert.equal(seen.announce({}), false);
+  assert.equal(seen.lastUserTurnAt(), 0);
+  assert.equal(typeof seen.onVoiceReady(() => {}), 'function');
 });

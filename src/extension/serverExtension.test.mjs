@@ -22,7 +22,7 @@ const tool = (name) => ({
   parameters: { type: 'object', properties: {} },
 });
 const good = () => ({
-  contract: 1,
+  contract: 2,
   tools: [tool('jobs_status')],
   instructions: 'Extra.',
   routes() {},
@@ -59,7 +59,11 @@ test('a valid extension passes validation', () => {
 
 test('wrong contract, clashing, duplicate or malformed tools are refused', () => {
   assert.throws(
-    () => validateServerExtension({ ...good(), contract: 2 }),
+    () => validateServerExtension({ ...good(), contract: 1 }),
+    /contract/,
+  );
+  assert.throws(
+    () => validateServerExtension({ ...good(), contract: 3 }),
     /contract/,
   );
   assert.throws(
@@ -104,7 +108,7 @@ test('no GEV_EXTENSION means no extension and no failure', async () => {
 
 test('a missing, broken or clashing extension is not loaded and is marked failed', async () => {
   const clash =
-    "export default { contract: 1, tools: [{ type: 'function', name: 'zoom_to_globe', description: 'd', parameters: { type: 'object', properties: {} } }], instructions: '', routes() {} }";
+    "export default { contract: 2, tools: [{ type: 'function', name: 'zoom_to_globe', description: 'd', parameters: { type: 'object', properties: {} } }], instructions: '', routes() {} }";
   for (const dir of [
     '/nonexistent/gev-ext',
     extensionDir('export default {'),
@@ -122,7 +126,7 @@ test('a missing, broken or clashing extension is not loaded and is marked failed
 
 test('an extension whose routes() throws is not loaded', async () => {
   const dir = extensionDir(
-    `export default { contract: 1, tools: [], instructions: '', routes() { throw new Error('boom') } }`,
+    `export default { contract: 2, tools: [], instructions: '', routes() { throw new Error('boom') } }`,
   );
   const out = await loadServerExtension(dir, { log: quiet });
   assert.equal(out.failed, true);
@@ -137,7 +141,7 @@ test('a relative GEV_EXTENSION path is refused', async () => {
 
 test('a loaded extension exposes its routes through the router', async () => {
   const dir =
-    extensionDir(`export default { contract: 1, tools: [], instructions: 'x',
+    extensionDir(`export default { contract: 2, tools: [], instructions: 'x',
     routes(r) { r.get('/ping', (req, res) => res.end('pong')) } }`);
   const { extension, router } = await loadServerExtension(dir, { log: quiet });
   assert.ok(extension);
