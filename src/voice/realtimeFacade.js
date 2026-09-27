@@ -424,6 +424,14 @@ export class RealtimeFacade {
     return this._turns.notifyMapEvent(...args);
   }
 
+  announce(...args) {
+    return this._turns.announce(...args);
+  }
+
+  get lastUserTurnAt() {
+    return this._turns.lastUserTurnAt;
+  }
+
   sendTextCommand(...args) {
     return this._turns.sendTextCommand(...args);
   }
